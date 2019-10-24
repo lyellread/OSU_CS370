@@ -1,0 +1,2 @@
+#!/bin/bash
+openssl dgst -sha$1 input-f-$2.txt > output-f-$2-sha$1
