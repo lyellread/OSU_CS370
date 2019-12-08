@@ -1,7 +1,11 @@
 # Time Based One Time Password Generator for Google Authenticator
 # Lyell Read / 12/7/2019
+# Citations: 
+# - https://stackoverflow.com/questions/8529265/google-authenticator-implementation-in-python
+# - https://tools.ietf.org/html/rfc4226
+# - https://tools.ietf.org/html/rfc6238
 
-import qrcode, os, sys, random, time, base64, 
+import qrcode, os, sys, random, time, base64, struct, hashlib, hmac
 
 def get_otp():
 
@@ -14,14 +18,31 @@ def get_otp():
 		exit()
 
 	key = keyfile.readlines()
-	key = otp_key[0].replace("\n", "")
+	key = key[0].replace("\n", "")
 
 	otp_key = base64.b32decode(key)
 	otp_time_step = 30
 	otp_time_0 = 0
 	otp_time_now = int(time.time())
 
-	otp_time
+	# generate the iterations to the current unix time. Note '//' instead 
+	# of '/' as this will discard the remainder and essentially 'round down' 
+	# or floor as describved in https://tools.ietf.org/html/rfc6238#section-4.2
+	otp_intervals = (otp_time_now - otp_time_0)//30
+
+	# generate struct of bytes from the intervals to be passed to the hash function
+	# as a big endian unsigned long long
+	otp_intervals = struct.pack(">Q", otp_intervals)
+
+	# run HMAC SHA 1 as in https://tools.ietf.org/html/rfc4226#section-5.2 wiht
+	# the otp_intervals as the 'message' and otp_key as the key
+	otp_hash_out = hmac.new(otp_key, otp_intervals, hashlib.sha1).digest()
+
+	print(otp_hash_out)
+
+
+
+
 
 
 
@@ -33,7 +54,7 @@ def generate_qr():
 	otp_user = str(input("User [alice@google.com] :") or "alice@google.com")
 
 	keyfile = open("./key", "w")
-	otp_key = ''.join([random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ234567") for u in range (0,16)])
+	otp_key = ''.join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") for u in range (0,16)])
 	keyfile.write(otp_key)
 	keyfile.close()
 
