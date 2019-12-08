@@ -9,8 +9,6 @@ import qrcode, os, sys, random, time, base64, struct, hashlib, hmac
 
 def get_otp():
 
-	print ("get_otp called")
-
 	try:
 		keyfile = open("./key", "r")
 	except:
@@ -38,25 +36,25 @@ def get_otp():
 	# the otp_intervals as the 'message' and otp_key as the key
 	otp_hash_out = hmac.new(otp_key, otp_intervals, hashlib.sha1).hexdigest()
 
-	#print(otp_hash_out)
-
 	# https://tools.ietf.org/html/rfc4226#section-5.4
-	otp_start_index = int(otp_hash_out[-1:], 16)
-	#print(otp_start_index)
+	otp_start_index = int(otp_hash_out[-1:], 16)	
 	
+	# get bytes at proper index, per https://tools.ietf.org/html/rfc4226#section-5.4
 	otp_hash_subset = otp_hash_out[otp_start_index*2 : (otp_start_index*2)+8]
-
-	#print(otp_hash_subset)
-
+	
+	# convert those bytes to int (using int(hex, 16) --> int) and and them with 0x7fffffff
+	# as described inhttps://tools.ietf.org/html/rfc4226#section-5.4
 	otp_code = (int("0x" + str(otp_hash_subset), 16) & 0x7fffffff) % 1000000
 
 	print(otp_code)
+
+	return
 
 
 
 def generate_qr():
 
-	print ("generate_qr called")
+	#print ("generate_qr called")
 
 	otp_label = str(input("Label [Example] :") or "Example")
 	otp_user = str(input("User [alice@google.com] :") or "alice@google.com")
