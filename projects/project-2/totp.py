@@ -36,13 +36,21 @@ def get_otp():
 
 	# run HMAC SHA 1 as in https://tools.ietf.org/html/rfc4226#section-5.2 wiht
 	# the otp_intervals as the 'message' and otp_key as the key
-	otp_hash_out = hmac.new(otp_key, otp_intervals, hashlib.sha1).digest()
+	otp_hash_out = hmac.new(otp_key, otp_intervals, hashlib.sha1).hexdigest()
 
-	print(otp_hash_out)
+	#print(otp_hash_out)
 
+	# https://tools.ietf.org/html/rfc4226#section-5.4
+	otp_start_index = int(otp_hash_out[-1:], 16)
+	#print(otp_start_index)
+	
+	otp_hash_subset = otp_hash_out[otp_start_index*2 : (otp_start_index*2)+8]
 
+	#print(otp_hash_subset)
 
+	otp_code = (int("0x" + str(otp_hash_subset), 16) & 0x7fffffff) % 1000000
 
+	print(otp_code)
 
 
 
